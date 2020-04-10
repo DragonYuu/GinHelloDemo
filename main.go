@@ -1,26 +1,25 @@
 package main
 
 import (
-	"GinHelloDemo/mysql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
+	"gin_blog/dao"
+	"gin_blog/gb"
+	"gin_blog/routers"
+	"go.uber.org/zap"
 )
 
-type User struct {
-	Id       int
-	Username string
-	Password string
+func init() {
+	gb.LogConf()
 }
 
 func main() {
-	db := mysql.GetDB()
-	var user []User
-	err := db.Select(&user, "SELECT id,username,password FROM users")
+	gb.Logger.Info("start project...")
+	err := dao.InitMySQL()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("init MySQL failed, err:%v\n", err)
+		gb.Logger.Error("init MySQL failed", zap.Any("error", err))
+		return
 	}
-	for key, value := range user {
-		fmt.Println(key, value.Id, value.Password, value.Username)
-	}
-	db.Close()
+	r := routers.SetupRouter() // 初始化路由
+	r.Run(":9999")
 }
